@@ -1,0 +1,36 @@
+REVERSE ENGINEERING 'PINBALL SPACE CADET'
+
+/*********GUIDELINES*********/
+
+- F = Function.
+- 0x means hex number.
+- GD! = GREAT DISCOVERY!
+
+/****************************/
+
+Discoveries:
+*** GENERAL
+- F 'get_scoring' is used to retrieve scoring object. Is is called only the first time a score is set after score has been initialized to zero. It isn't called
+every time score is updated.
+- Switch for defining missions and also controlling game end is in 0x01011E40
+
+*** ABOUT GAME OVER
+- Game over controller is the 32 switch case (0x01011E40 + 0x20, mentioned before). It's called when you lose 3rd ball.
+- 0x01023BBC contains a reference a posible data structure located in 0x4A3DED0 from which the switch case position (e.g 0x20) is extracted in F 'MissionControl'. It's possible that it comes from a point where a condition related to NUMBER OF BALLS is evalutated. The exact byte that is taken to define the switch case the flow will go is taken from 0x04A3DED6.
+- F 'ChangeBallCount' seems to be very important. It's called when you lose a ball.
+- (GD!) Number of balls is at byte ptr [0x04A24D16]. It's updated by 'ChangeBallCount'. In actual raw file, this byte is at 0x00011CF2.
+- (GD!) Changing opcode byte in 0x010128F2 (in raw file: 0x00011CF2) from 0x48 (dec) to 0x90 (nop) will cause to disable decrement of balls left.
+
+*** TO BUILD A FEATURE THAT ALLOWS TO TURN ON/OFF 'FOREVER MODE'
+- I defined that Menu's 'Demo' option will trigger change of state when clicked. To achieve this, the upcoming will be implemented.
+- Everytime you click 'Demo', F '_pb_replay_level' is called, but with arg_0 (ebp + 0x8) = 1. When you press F2 to start a new game, '_pb_replay_level' it's called too, but with arg_0 = 0.
+- I will put my code between 0x010146F9 and 0x0101472B
+
+- F pb_toggle_demo() is called every time you click 'Demo' tab and it turns on/off demo gameplay.
+- text:0x01015809 contains the jz that defines the if condition of the toggling descripted above. I want to eliminate that posible jump and instead make
+ program bypass that condition, so I turn that instruction into NOPs. To do so I changed all function instructions to 0x90. I patched 36 bytes total. 
+
+- Inside pb_toggle_demo I call pb_end_game to trigger the process that records my score and finish the game (whenever I want... don't forget we've 
+ got infinite balls and if we don't do something like this, then we could never register our score like in the original game). 
+- F _show_high_score_dialog shows the high score dialog.
+
