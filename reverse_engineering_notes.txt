@@ -26,11 +26,12 @@ every time score is updated.
 - Everytime you click 'Demo', F '_pb_replay_level' is called, but with arg_0 (ebp + 0x8) = 1. When you press F2 to start a new game, '_pb_replay_level' it's called too, but with arg_0 = 0.
 - I will put my code between 0x010146F9 and 0x0101472B
 
-- F pb_toggle_demo() is called every time you click 'Demo' tab and it turns on/off demo gameplay.
+- F pb_toggle_demo() (0x01015802, IDA) is called every time you click 'Demo' tab and it turns on/off demo gameplay.
 - text:0x01015809 contains the jz that defines the if condition of the toggling descripted above. I want to eliminate that posible jump and instead make
  program bypass that condition, so I turn that instruction into NOPs. To do so I changed all function instructions to 0x90. I patched 36 bytes total. 
 
-- Inside pb_toggle_demo I call pb_end_game to trigger the process that records my score and finish the game (whenever I want... don't forget we've 
+- Inside pb_toggle_demo I call pb_end_game (0x0101479B, IDA) to trigger the process that records my score and finish the game (whenever I want... don't forget we've 
  got infinite balls and if we don't do something like this, then we could never register our score like in the original game). 
 - F _show_high_score_dialog shows the high score dialog.
+
 
