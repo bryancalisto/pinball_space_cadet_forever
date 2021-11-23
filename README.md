@@ -1,7 +1,8 @@
 # pinball_space_cadet_forever
-Tool to toggle ball decreasing in 3D Pinball Space Cadet binary (To have infinite balls).
-<br/>
-<br/>
-<p>It's a work in progress.<br/>
-Currently, you can't save your super-high-score (because you never lose all your balls
-and trigger a 'game over').</p>
+<p>Tool that allows you to enable infinite (♾️) balls in Pinball Space Cadet. You can trigger a game end whenever you want.</p>
+<p>The program works by patching the ball decreasing instruction (converting it to a NOP) and the menu's Demo option functionality (using it to trigger a game end manually).</p>
+
+## Usage
+- If you want to ****enable**** the hack: `python patchPinball.py pathToYourPinball.exe patch`.
+- If you want to **disable** the hack: `python patchPinball.py pathToYourPinball.exe unpatch`.
+- To **finish the game and save your score**, click **Demo** in the menu.
