@@ -9,7 +9,7 @@ OPERATIONS = {
 }
 
 # NOTE: IDA addresses have an offset of 1000C00 over the raw file addresses. For instance,
-# the code located in the raw file, in the address 0x00011CF2, is in 0x010128F2 in IDA.
+# the code located in the raw file in the address 0x00011CF2, is in 0x010128F2 in IDA.
 # Remember to base the calculations on 2's complement
 
 # SOME INSTRUCTIONS
@@ -20,11 +20,11 @@ RETN = b'\xC3'
 
 # ADDRESSES
 DECREMENT_BALL_ADDRESS = 0x00011CF2
-END_GAME_CODE_ADDRESS = 0x00013B9B      # 0x0101479B
-TOGGLE_DEMO_MODE_ADDRESS = 0x00014C02   # 0x01015802
+END_GAME_CODE_ADDRESS = 0x00013B9B      # 0x0101479B in IDA
+TOGGLE_DEMO_MODE_ADDRESS = 0x00014C02   # 0x01015802 in IDA
 
 # CODE
-CALL_SAVE_SCORE_ROUTINE = CALL + b'\x94\xEF\xff\xff' + RETN + NOP  # THIS IS WRONG!!!
+CALL_SAVE_SCORE_ROUTINE = CALL + b'\x94\xEF\xff\xff' + RETN + NOP
 ORIGINAL_TOGGLE_DEMO_ROUTINE = b'\x83\x3D\x70\x55\x02\x01\x00'
 
 if len(sys.argv) != 3:
