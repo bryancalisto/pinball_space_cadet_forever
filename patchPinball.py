@@ -1,7 +1,6 @@
-"""
-Patches pinball binary to disable / re-enable ball decrement (infinite balls)
-"""
 import sys
+from requests import patch
+from utils import getHash
 
 OPERATIONS = {
     'patch': 'patch',
@@ -11,6 +10,10 @@ OPERATIONS = {
 # NOTE: IDA addresses have an offset of 1000C00 over the raw file addresses. For instance,
 # the code located in the raw file in the address 0x00011CF2, is in 0x010128F2 in IDA.
 # Remember to base the calculations on 2's complement
+
+# Supported binaries hash
+originalFileHash = 'faa1fde004b3c60b5a8068a7c3aab151'
+patchedFileHash = '554cbf463584a1a5a525a46aee7a7912'
 
 # SOME INSTRUCTIONS
 NOP = b'\x90'
@@ -34,52 +37,42 @@ if len(sys.argv) != 3:
 filename = sys.argv[1]
 op = sys.argv[2]
 
-# FOR DEBUGGING
-# with open(filename, 'r+b') as f:
-#     f.seek(TOGGLE_DEMO_MODE_ADDRESS)
-#     print(f.read(6).hex())
-# exit(0)
-
 try:
     with open(filename, 'r+b') as f:
-        f.seek(DECREMENT_BALL_ADDRESS)
+        hash = getHash(f.read())
 
         if op == OPERATIONS['patch']:
-            print('PATCHING')
-
-            if f.read(1).hex() == NOP.hex():
-                print('Aparently, this binary is already patched')
+            if hash != originalFileHash:
+                print('Cannot patch this file')
                 f.close()
                 exit(0)
 
+            print('Patching...')
+
             # Remove decrement ball instruction
-            print('Writing byte {DECREMENT_BALL_ADDRESS} with NOP instruction (0x90)')
             f.seek(DECREMENT_BALL_ADDRESS)
             f.write(NOP)
 
             # Add functionality to save score when toggling demo
-            print('Writing code to save score')
             f.seek(TOGGLE_DEMO_MODE_ADDRESS)
             f.write(CALL_SAVE_SCORE_ROUTINE)
         elif op == OPERATIONS['unpatch']:
-            print('UNPATCHING')
-
-            if f.read(1).hex() == DEC.hex():
-                print('Aparently, this binary is already unpatched')
+            if hash == originalFileHash:
+                print('Cannot unpatch this file')
                 f.close()
                 exit(0)
 
+            print('Unpatching...')
+
             # Add decrement ball instruction
-            print('Writing byte {DECREMENT_BALL_ADDRESS} with DEC instruction (0x48)')
             f.seek(DECREMENT_BALL_ADDRESS)
             f.write(DEC)
 
             # Remove functionality to save score when toggling demo
-            print('Removing code to save score')
             f.seek(TOGGLE_DEMO_MODE_ADDRESS)
             f.write(ORIGINAL_TOGGLE_DEMO_ROUTINE)
 
-    print('SUCCESS')
+    print('Success! Go to play!')
 except Exception as e:
     print('ERROR')
     print(e)
