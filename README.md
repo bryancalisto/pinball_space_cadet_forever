@@ -1,5 +1,5 @@
 # pinball_space_cadet_forever
-<p>Tool that allows you to enable infinite (♾️) balls in Pinball Space Cadet. You can trigger a game end whenever you want.</p>
+<p>Tool that allows you to enable infinite balls in Pinball Space Cadet. You can trigger a game end whenever you want.</p>
 <p>The program works by patching the ball decreasing instruction (converting it to a NOP) and the menu's Demo option functionality (using it to trigger a game end manually).</p>
 
 ## Usage
