@@ -41,33 +41,68 @@ UINT_PTR GetProcessBaseAddress(DWORD processID, HANDLE *processHandle)
   HMODULE *moduleArray;
   LPBYTE moduleArrayBytes;
   DWORD bytesRequired;
+  LPWSTR exeFilename = (LPWSTR)LocalAlloc(LPTR, 256);
+  DWORD exeFilenameLen = 0;
+  LPWSTR moduleFilename = (LPWSTR)LocalAlloc(LPTR, 1024);
+  DWORD moduleFilenameLen = 0;
+  wstring exeName = L"C:\\Users\\itsme007\\Documents\\Apps\\pinball\\pinball_original.exe";
 
   if (*processHandle)
   {
-    if (EnumProcessModulesEx(*processHandle, NULL, 0, &bytesRequired, 0x02))
+    exeFilenameLen = GetProcessImageFileNameW(*processHandle, exeFilename, 256);
+
+    if (exeFilenameLen)
     {
-      if (bytesRequired)
+      printf("exe: %d, %ls\n", exeFilenameLen, exeFilename);
+
+      if (EnumProcessModulesEx(*processHandle, NULL, 0, &bytesRequired, 0x02))
       {
-        moduleArrayBytes = (LPBYTE)LocalAlloc(LPTR, bytesRequired);
-
-        if (moduleArrayBytes)
+        if (bytesRequired)
         {
-          unsigned int moduleCount;
+          moduleArrayBytes = (LPBYTE)LocalAlloc(LPTR, bytesRequired);
 
-          moduleCount = bytesRequired / sizeof(HMODULE);
-          printf("Module count: %d\n", moduleCount);
-          moduleArray = (HMODULE *)moduleArrayBytes;
-
-          if (EnumProcessModulesEx(*processHandle, moduleArray, bytesRequired, &bytesRequired, 0x02))
+          if (moduleArrayBytes)
           {
-            baseAddress = (DWORD_PTR)moduleArray[0];
-          }
+            unsigned int moduleCount;
 
-          LocalFree(moduleArrayBytes);
+            moduleCount = bytesRequired / sizeof(HMODULE);
+            printf("Module count: %d\n", moduleCount);
+            moduleArray = (HMODULE *)moduleArrayBytes;
+
+            if (EnumProcessModulesEx(*processHandle, moduleArray, bytesRequired, &bytesRequired, 0x02))
+            {
+              for (int i = 0; i < moduleCount; i++)
+              {
+                moduleFilenameLen = GetModuleFileNameExW(*processHandle, moduleArray[i], moduleFilename, 1024);
+
+                if (!moduleFilenameLen)
+                {
+                  printf("Error at GetModuleFileNameEx (0x%x): %d\n", (DWORD_PTR)moduleArray[i] + 0x00f6b7ec, GetLastError());
+                  continue;
+                }
+
+                printf("module_exe: %ls\n", exeName);
+                printf("module: %ls\n", moduleFilename);
+
+                if (moduleFilename == exeName)
+                {
+                  // baseAddress = GetModuleInformation(*processHandle, moduleArray[i],)
+                  printf("FOUND MODULE: %d\n", i);
+                  baseAddress = (DWORD_PTR)moduleArray[i];
+                  break;
+                }
+              }
+            }
+
+            LocalFree(moduleArrayBytes);
+          }
         }
       }
     }
   }
+
+  LocalFree(exeFilename);
+  LocalFree(moduleFilename);
 
   return baseAddress;
 }
@@ -102,13 +137,12 @@ int main(void)
     else
     {
       UINT_PTR baseAddress = GetProcessBaseAddress(PID, &hProc);
-      UINT32 decAddressStatic = 0x00011CF2;
-      // UINT32 decAddressStatic = 0x0001479B;
+      UINT32 decAddressStatic = 0x000128F2;
       int decAddress = baseAddress + decAddressStatic;
-      printf("Base address 0x%x\n", decAddress);
-      int uiBallCounter = 0x0498bba4;
-      int score = 0x02f9c13c;
-      int stat = WriteProcessMemory(hProc, (LPVOID)decAddress, &newballCount, (DWORD)sizeof(newballCount), NULL);
+      printf("Base address 0x%x\n", baseAddress);
+      int nop = 0x90;
+      int dec = 0x48;
+      int stat = WriteProcessMemory(hProc, (LPVOID)decAddress, &dec, (DWORD)1, NULL);
       printf("Reading 0x%x\n", decAddress);
       // int stat = ReadProcessMemory(hProc, (LPVOID)decAddress, &buffer, 10, NULL);
 
