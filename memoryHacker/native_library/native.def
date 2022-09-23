@@ -1,0 +1,4 @@
+LIBRARY native
+
+EXPORTS
+  toggleHack
