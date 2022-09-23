@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:memoryhacker/utils/native_bridge.dart';
 
 class ControlPage extends StatefulWidget {
   const ControlPage({super.key});
@@ -13,6 +14,7 @@ class _ControlPageState extends State<ControlPage> {
   void toggleHack() {
     setState(() {
       hackIsActive = !hackIsActive;
+      final res = nativeToggleHack();
     });
   }
 
