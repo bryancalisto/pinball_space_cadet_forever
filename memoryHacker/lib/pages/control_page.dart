@@ -14,7 +14,8 @@ class _ControlPageState extends State<ControlPage> {
   void toggleHack() {
     setState(() {
       hackIsActive = !hackIsActive;
-      final res = nativeToggleHack();
+      final res = nativeToggleHack(!hackIsActive);
+      print('res $res');
     });
   }
 

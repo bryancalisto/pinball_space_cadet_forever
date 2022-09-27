@@ -1,29 +1,22 @@
-#include <iostream>
-#include <Psapi.h>
-#include <stdio.h>
 #include <windows.h>
+#include <iostream>
+#include <psapi.h>
+#include <stdio.h>
 #include "native.h"
-// #pragma comment(lib, "user32")
 
 using namespace std;
 // CONNECT C - Dart Guide: https://dart.dev/guides/libraries/c-interop
 
 int main()
 {
-  toggleHack();
-  return 0;
-}
-
-int toggleHack()
-{
-  printf("Toggle\n");
+  toggleHack(true);
   return 0;
 }
 
 HWND findPinballWindow()
 {
 #ifdef DEBUG
-  printf("Searching window with classname '%s'\n");
+  printf("Searching window with classname 'WaveMixSoundGuy'\n");
 #endif
 
   HWND hWnd = FindWindowA("WaveMixSoundGuy", nullptr);
@@ -40,14 +33,14 @@ HWND findPinballWindow()
 
 UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
 {
-  DWORD_PTR baseAddress = 0;
+  UINT_PTR baseAddress = 0;
 
   HMODULE *moduleArray;
   LPBYTE moduleArrayBytes;
   DWORD bytesRequired;
   LPWSTR exeFilename = (LPWSTR)LocalAlloc(LPTR, 256);
   DWORD exeFilenameLen = 0;
-  LPWSTR moduleFilename = (LPWSTR)LocalAlloc(LPTR, 1024);
+  LPWSTR moduleFilename = (LPWSTR)LocalAlloc(LPTR, 256);
   DWORD moduleFilenameLen = 0;
   wstring exeName = L"C:\\Users\\itsme007\\Documents\\Apps\\pinball\\pinball_original.exe";
 
@@ -61,7 +54,7 @@ UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
       printf("exe filename len: %d, %ls\n", exeFilenameLen, exeFilename);
 #endif
 
-      if (EnumProcessModulesEx(*handle, NULL, 0, &bytesRequired, 0x02))
+      if (EnumProcessModulesEx(*handle, NULL, 0, &bytesRequired, 0x01))
       {
         if (bytesRequired)
         {
@@ -69,32 +62,37 @@ UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
 
           if (moduleArrayBytes)
           {
-            unsigned int moduleCount;
+            int moduleCount;
 
             moduleCount = bytesRequired / sizeof(HMODULE);
+#ifdef DEBUG
             printf("Module count: %d\n", moduleCount);
+#endif
             moduleArray = (HMODULE *)moduleArrayBytes;
 
-            if (EnumProcessModulesEx(*handle, moduleArray, bytesRequired, &bytesRequired, 0x02))
+            if (EnumProcessModulesEx(*handle, moduleArray, bytesRequired, &bytesRequired, 0x01))
             {
               for (int i = 0; i < moduleCount; i++)
               {
-                moduleFilenameLen = GetModuleFileNameExW(*handle, moduleArray[i], moduleFilename, 1024);
+                moduleFilenameLen = GetModuleFileNameExW(*handle, moduleArray[i], moduleFilename, 256);
 
                 if (!moduleFilenameLen)
                 {
-                  printf("Error at GetModuleFileNameEx (0x%x): %d\n", (DWORD_PTR)moduleArray[i] + 0x00f6b7ec, GetLastError());
+#ifdef DEBUG
+                  printf("Error at GetModuleFileNameEx (0x%p): %d\n", (void *)moduleArray[i], GetLastError());
+#endif
                   continue;
                 }
 
-                printf("module_exe: %ls\n", exeName);
+                printf("module_exe: %ls\n", exeName.c_str());
                 printf("module: %ls\n", moduleFilename);
 
                 if (moduleFilename == exeName)
                 {
-                  // baseAddress = GetModuleInformation(*handle, moduleArray[i],)
-                  printf("FOUND MODULE: %d\n", i);
-                  baseAddress = (DWORD_PTR)moduleArray[i];
+#ifdef DEBUG
+                  printf("Found .exe module\n");
+#endif
+                  baseAddress = (UINT_PTR)moduleArray[i];
                   break;
                 }
               }
@@ -115,11 +113,12 @@ UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
 
 HANDLE getProcessHandle(HWND hWnd, DWORD &PID)
 {
+  GetWindowThreadProcessId(hWnd, &PID);
+
 #ifdef DEBUG
   printf("Getting process handle (PID: %d)\n", PID);
 #endif
 
-  GetWindowThreadProcessId(hWnd, &PID);
   HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, false, PID);
 
 #ifdef DEBUG
@@ -137,7 +136,7 @@ int writeMemory(HANDLE handle, UINT_PTR aimedAddress, int data, uint8_t dataSize
   int result = WriteProcessMemory(handle, (LPVOID)aimedAddress, &data, dataSize, NULL);
 
 #ifdef DEBUG
-  printf("Writing 0x%x to [0x%x]\n", data, aimedAddress);
+  printf("Writing 0x%x to [0x%p]\n", data, (void *)aimedAddress);
 #endif
 
   if (result > 0)
@@ -156,10 +155,10 @@ int writeMemory(HANDLE handle, UINT_PTR aimedAddress, int data, uint8_t dataSize
 
 int readMemory(HANDLE handle, UINT_PTR aimedAddress, unsigned char *buffer, uint8_t nBytesToRead)
 {
-  int result = ReadProcessMemory(handle, (LPVOID)aimedAddress, &buffer, nBytesToRead, NULL);
+  int result = ReadProcessMemory(handle, (LPVOID)aimedAddress, buffer, nBytesToRead, NULL);
 
 #ifdef DEBUG
-  printf("Reading %d bytes from [0x%x]\n", nBytesToRead, aimedAddress);
+  printf("Reading %d bytes from [0x%p]\n", nBytesToRead, (void *)aimedAddress);
 #endif
 
   if (result > 0)
@@ -169,12 +168,12 @@ int readMemory(HANDLE handle, UINT_PTR aimedAddress, unsigned char *buffer, uint
 
     printf("[ ");
 
-    while (buffer)
+    for (int i = 0; i < nBytesToRead; i++)
     {
-      printf("%d ", *buffer);
+      printf("0x%x ", *(buffer + i));
     }
 
-    printf("]");
+    printf("]\n");
 #endif
   }
   else
@@ -187,7 +186,7 @@ int readMemory(HANDLE handle, UINT_PTR aimedAddress, unsigned char *buffer, uint
 
 int toggleHack(bool activate)
 {
-  DWORD PID;
+  DWORD PID = 0;
   int instruction = NOP_INSTRUCTION;
 
   if (!activate)
@@ -195,8 +194,7 @@ int toggleHack(bool activate)
     instruction = DEC_INSTRUCTION;
   }
 
-  HWND hWnd;
-  hWnd = findPinballWindow();
+  HWND hWnd = findPinballWindow();
 
   if (!hWnd)
   {
@@ -209,29 +207,40 @@ int toggleHack(bool activate)
   {
     return NO_OPEN_PROCESS;
   }
-  else
+
+  unsigned char buffer[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  UINT_PTR baseAddress = getProcessBaseAddress(PID, &hProc);
+  UINT_PTR aimedAddressStatic = 0x000128F2;
+#ifdef DEBUG
+  printf("Base address: 0x%p\n", (void *)baseAddress);
+#endif
+  UINT_PTR aimedAddress = baseAddress + aimedAddressStatic;
+
+  int readResult = readMemory(hProc, aimedAddress, buffer, 1);
+
+  if (!readResult)
   {
-    unsigned char buffer[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    UINT_PTR baseAddress = getProcessBaseAddress(PID, &hProc);
-    UINT_PTR aimedAddressStatic = 0x000128F2;
-    UINT_PTR aimedAddress = baseAddress + aimedAddressStatic;
-
-    int readResult = readMemory(hProc, aimedAddress, buffer, 1);
-
-    if (!readResult)
-    {
-      return READ_MEMORY;
-    }
-
-    int writeResult = writeMemory(hProc, aimedAddress, instruction, 1);
-
-    if (!writeResult)
-    {
-      return WRITE_MEMORY;
-    }
-
-    CloseHandle(hProc);
+    return READ_MEMORY;
   }
+
+  if (buffer[0] != DEC_INSTRUCTION && buffer[0] != NOP_INSTRUCTION)
+  {
+    return UNEXPECTED_BYTECODE;
+  }
+
+  if ((activate && buffer[0] == NOP_INSTRUCTION) || (!activate && buffer[0] == DEC_INSTRUCTION))
+  {
+    return NO_OPERATION;
+  }
+
+  int writeResult = writeMemory(hProc, aimedAddress, instruction, 1);
+
+  if (!writeResult)
+  {
+    return WRITE_MEMORY;
+  }
+
+  CloseHandle(hProc);
 
   return 0;
 }

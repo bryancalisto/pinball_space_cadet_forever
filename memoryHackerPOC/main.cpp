@@ -55,7 +55,7 @@ UINT_PTR GetProcessBaseAddress(DWORD processID, HANDLE *processHandle)
     {
       printf("exe: %d, %ls\n", exeFilenameLen, exeFilename);
 
-      if (EnumProcessModulesEx(*processHandle, NULL, 0, &bytesRequired, 0x02))
+      if (EnumProcessModulesEx(*processHandle, NULL, 0, &bytesRequired, 0x01))
       {
         if (bytesRequired)
         {
@@ -69,7 +69,7 @@ UINT_PTR GetProcessBaseAddress(DWORD processID, HANDLE *processHandle)
             printf("Module count: %d\n", moduleCount);
             moduleArray = (HMODULE *)moduleArrayBytes;
 
-            if (EnumProcessModulesEx(*processHandle, moduleArray, bytesRequired, &bytesRequired, 0x02))
+            if (EnumProcessModulesEx(*processHandle, moduleArray, bytesRequired, &bytesRequired, 0x01))
             {
               for (int i = 0; i < moduleCount; i++)
               {
