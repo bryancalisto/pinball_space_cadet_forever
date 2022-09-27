@@ -2,6 +2,7 @@
 #include <iostream>
 #include <psapi.h>
 #include <stdio.h>
+#include <string>
 #include "native.h"
 
 using namespace std;
@@ -38,20 +39,19 @@ UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
   HMODULE *moduleArray;
   LPBYTE moduleArrayBytes;
   DWORD bytesRequired;
-  LPWSTR exeFilename = (LPWSTR)LocalAlloc(LPTR, 256);
-  DWORD exeFilenameLen = 0;
+  DWORD exeFilenameBufferLen = 256;
+  LPWSTR exeFilename = (LPWSTR)LocalAlloc(LPTR, exeFilenameBufferLen);
   LPWSTR moduleFilename = (LPWSTR)LocalAlloc(LPTR, 256);
   DWORD moduleFilenameLen = 0;
-  wstring exeName = L"C:\\Users\\itsme007\\Documents\\Apps\\pinball\\pinball_original.exe";
 
   if (*handle)
   {
-    exeFilenameLen = GetProcessImageFileNameW(*handle, exeFilename, 256);
+    BOOL result = QueryFullProcessImageNameW(*handle, 0, exeFilename, &exeFilenameBufferLen);
 
-    if (exeFilenameLen)
+    if (result)
     {
 #ifdef DEBUG
-      printf("exe filename len: %d, %ls\n", exeFilenameLen, exeFilename);
+      printf("exe filename '%ls'\n", exeFilename);
 #endif
 
       if (EnumProcessModulesEx(*handle, NULL, 0, &bytesRequired, 0x01))
@@ -84,10 +84,7 @@ UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
                   continue;
                 }
 
-                printf("module_exe: %ls\n", exeName.c_str());
-                printf("module: %ls\n", moduleFilename);
-
-                if (moduleFilename == exeName)
+                if (*moduleFilename == *exeFilename)
                 {
 #ifdef DEBUG
                   printf("Found .exe module\n");
