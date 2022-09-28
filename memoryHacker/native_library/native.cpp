@@ -6,11 +6,13 @@
 #include "native.h"
 
 using namespace std;
-// CONNECT C - Dart Guide: https://dart.dev/guides/libraries/c-interop
 
 int main()
 {
+  toggleHack(false);
+  printf("IS ACTIVE: %d\n", isHackActive());
   toggleHack(true);
+  printf("IS ACTIVE: %d\n", isHackActive());
   return 0;
 }
 
@@ -205,27 +207,26 @@ int toggleHack(bool activate)
     return NO_OPEN_PROCESS;
   }
 
-  unsigned char buffer[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  unsigned char buffer;
   UINT_PTR baseAddress = getProcessBaseAddress(PID, &hProc);
-  UINT_PTR aimedAddressStatic = 0x000128F2;
 #ifdef DEBUG
   printf("Base address: 0x%p\n", (void *)baseAddress);
 #endif
-  UINT_PTR aimedAddress = baseAddress + aimedAddressStatic;
+  UINT_PTR aimedAddress = baseAddress + DEC_INSTRUCTION_ADDRESS;
 
-  int readResult = readMemory(hProc, aimedAddress, buffer, 1);
+  int readResult = readMemory(hProc, aimedAddress, &buffer, 1);
 
   if (!readResult)
   {
     return READ_MEMORY;
   }
 
-  if (buffer[0] != DEC_INSTRUCTION && buffer[0] != NOP_INSTRUCTION)
+  if (buffer != DEC_INSTRUCTION && buffer != NOP_INSTRUCTION)
   {
     return UNEXPECTED_BYTECODE;
   }
 
-  if ((activate && buffer[0] == NOP_INSTRUCTION) || (!activate && buffer[0] == DEC_INSTRUCTION))
+  if ((activate && buffer == NOP_INSTRUCTION) || (!activate && buffer == DEC_INSTRUCTION))
   {
     return NO_OPERATION;
   }
@@ -240,4 +241,48 @@ int toggleHack(bool activate)
   CloseHandle(hProc);
 
   return 0;
+}
+
+int isHackActive()
+{
+  DWORD PID = 0;
+
+  HWND hWnd = findPinballWindow();
+
+  if (!hWnd)
+  {
+    return NO_WINDOW;
+  }
+
+  HANDLE hProc = getProcessHandle(hWnd, PID);
+
+  if (!hProc)
+  {
+    return NO_OPEN_PROCESS;
+  }
+
+  unsigned char buffer;
+  UINT_PTR baseAddress = getProcessBaseAddress(PID, &hProc);
+#ifdef DEBUG
+  printf("Base address: 0x%p\n", (void *)baseAddress);
+#endif
+  UINT_PTR aimedAddress = baseAddress + DEC_INSTRUCTION_ADDRESS;
+
+  int readResult = readMemory(hProc, aimedAddress, &buffer, 1);
+
+  if (!readResult)
+  {
+    return READ_MEMORY;
+  }
+
+  if (buffer != DEC_INSTRUCTION && buffer != NOP_INSTRUCTION)
+  {
+    return UNEXPECTED_BYTECODE;
+  }
+
+  bool result = buffer != DEC_INSTRUCTION;
+
+  CloseHandle(hProc);
+
+  return result;
 }
