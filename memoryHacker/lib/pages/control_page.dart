@@ -9,13 +9,45 @@ class ControlPage extends StatefulWidget {
 }
 
 class _ControlPageState extends State<ControlPage> {
-  bool hackIsActive = false;
+  late bool hackIsActive;
+
+  void _checkAndUpdateHackStatus() {
+    final result = nativeIsHackActive();
+
+    if (![0, 1].contains(result)) {
+      // There was an error
+      print('There was a error: $result');
+
+      setState(() {
+        hackIsActive = false;
+      });
+
+      return;
+    }
+
+    setState(() {
+      hackIsActive = result == 1;
+    });
+
+    return;
+  }
+
+  @override
+  void initState() {
+    _checkAndUpdateHackStatus();
+    super.initState();
+  }
 
   void toggleHack() {
     setState(() {
+      final result = nativeToggleHack(!hackIsActive);
+
+      if (result != 0) {
+        print('There was a error: $result');
+        return;
+      }
+
       hackIsActive = !hackIsActive;
-      final res = nativeToggleHack(!hackIsActive);
-      print('res $res');
     });
   }
 
@@ -25,7 +57,9 @@ class _ControlPageState extends State<ControlPage> {
       body: Center(
         child: ElevatedButton(
           onPressed: toggleHack,
-          child: Text(hackIsActive ? 'Deactivate' : 'Activate'),
+          child: Text(
+            hackIsActive ? 'Deactivate' : 'Activate',
+          ),
         ),
       ),
     );
