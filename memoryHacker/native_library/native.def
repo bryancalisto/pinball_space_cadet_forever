@@ -1,0 +1,5 @@
+LIBRARY native
+
+EXPORTS
+  toggleHack
+  isHackActive
