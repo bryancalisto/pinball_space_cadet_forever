@@ -45,7 +45,7 @@ UINT_PTR GetProcessBaseAddress(DWORD processID, HANDLE *processHandle)
   DWORD exeFilenameLen = 0;
   LPWSTR moduleFilename = (LPWSTR)LocalAlloc(LPTR, 1024);
   DWORD moduleFilenameLen = 0;
-  wstring exeName = L"C:\\Users\\itsme007\\Documents\\Apps\\pinball\\pinball_original.exe";
+  wstring exeName = L"C:\\Users\\bryan\\Documents\\Apps\\pinball\\pinball_original.exe";
 
   if (*processHandle)
   {
