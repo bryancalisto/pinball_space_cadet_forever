@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class Point {
@@ -9,10 +11,9 @@ class Point {
 
 class Piece extends StatefulWidget {
   final List<Point> points;
-  final Size size;
   final Color color;
 
-  Piece({required this.points, required this.size, required this.color});
+  const Piece({super.key, required this.points, required this.color});
 
   @override
   State<Piece> createState() => _PieceState();
@@ -20,54 +21,35 @@ class Piece extends StatefulWidget {
 
 class _PieceState extends State<Piece> {
   late Color _color;
-  late Size _size;
-  bool _active = false;
 
   @override
   void initState() {
     _color = widget.color;
-    _size = widget.size;
 
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        _color = _active ? Colors.black : _color;
-      },
-      onHover: (hovering) {
-        print(hovering);
-        setState(() {
-          _color = !hovering ? Colors.black : _color;
-          print(_color.toString());
-        });
-      },
-      child: SizedBox(
-        width: widget.size.width,
-        height: widget.size.height,
-        child: CustomPaint(
-          painter: PiecePainter(points: widget.points, color: _color),
-        ),
-      ),
+    return ClipPath(
+      clipper: PieceClipper(points: widget.points),
+      child: Material(
+          color: _color,
+          child: InkWell(
+            hoverColor: Colors.amber.shade200,
+            onTap: () {},
+          )),
     );
   }
 }
 
-// TODO: Change this to a CustomClipper to define the shape of the piece for events (clicks, hover, etc)
-class PiecePainter extends CustomPainter {
+class PieceClipper extends CustomClipper<Path> {
   final List<Point> points;
-  final Color color;
 
-  PiecePainter({required this.points, required this.color});
+  PieceClipper({required this.points});
 
   @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
+  Path getClip(Size size) {
     Path path = Path();
 
     path.moveTo(points[0].x * size.width, points[0].y * size.height);
@@ -78,9 +60,9 @@ class PiecePainter extends CustomPainter {
 
     path.close();
 
-    canvas.drawPath(path, paint);
+    return path;
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

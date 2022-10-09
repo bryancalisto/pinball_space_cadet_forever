@@ -23,24 +23,29 @@ class _BackgroundState extends State<Background> {
     Point(0.5, 0.5),
   ];
 
+  List<Point> points3 = [
+    Point(0, 1),
+    Point(1, 1),
+    Point(0.5, 0.5),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.amber,
-      child: Stack(
-        children: [
-          Piece(
-            points: points1,
-            size: MediaQuery.of(context).size,
-            color: Colors.red,
-          ),
-          Piece(
-            points: points2,
-            size: MediaQuery.of(context).size,
-            color: Colors.blue,
-          ),
-        ],
-      ),
+    return Stack(
+      children: [
+        Piece(
+          points: points1,
+          color: Colors.red,
+        ),
+        Piece(
+          points: points2,
+          color: Colors.blue,
+        ),
+        Piece(
+          points: points3,
+          color: Colors.yellow,
+        ),
+      ],
     );
   }
 }
