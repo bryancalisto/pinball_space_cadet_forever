@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memoryhacker/utils/native_bridge.dart';
-import 'package:memoryhacker/widgets/background.dart';
-import 'package:memoryhacker/widgets/piece.dart';
+import 'package:memoryhacker/widgets/button.dart';
 
 class ControlPage extends StatefulWidget {
   const ControlPage({super.key});
@@ -12,6 +11,7 @@ class ControlPage extends StatefulWidget {
 
 class _ControlPageState extends State<ControlPage> {
   late bool _hackIsActive;
+  String _msg = 'TEST';
   bool debug = true;
 
   void _checkAndUpdateHackStatus() {
@@ -24,7 +24,6 @@ class _ControlPageState extends State<ControlPage> {
     final result = nativeIsHackActive();
 
     if (![0, 1].contains(result)) {
-      // There was an error
       print('There was a error: $result');
 
       setState(() {
@@ -67,16 +66,23 @@ class _ControlPageState extends State<ControlPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          const Background(),
-          Center(
-            child: ElevatedButton(
-              onPressed: toggleHack,
-              child: const Icon(Icons.abc),
-            ),
-          )
-        ],
+      body: Container(
+        color: const Color.fromRGBO(37, 32, 32, 1),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _msg,
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.height * 0.03,
+                  color: Colors.white,
+                ),
+              ),
+              HackToggleButton(onPressed: toggleHack, hackIsActive: _hackIsActive),
+            ],
+          ),
+        ),
       ),
     );
   }
