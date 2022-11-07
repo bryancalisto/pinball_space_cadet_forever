@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memoryhacker/pages/control_page.dart';
+import 'package:memoryhacker/pages/control_page/control_page.dart';
 
 void main() {
   runApp(const MyApp());

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memoryhacker/utils/native_bridge.dart';
-import 'package:memoryhacker/widgets/button.dart';
+import 'package:memoryhacker/pages/control_page/hack_toggle_button.dart';
 
 class ControlPage extends StatefulWidget {
   const ControlPage({super.key});
