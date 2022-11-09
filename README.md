@@ -1,3 +1,4 @@
+### WORK IN PROGRESS
 # pinball_space_cadet_forever
 A tool that to enable infinite balls in Pinball Space Cadet. You can trigger a game end whenever you want (to save your score).
 
