@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Pinball Space Cadet Memory hacker',
+      title: 'Pinball MemoryHacker',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
