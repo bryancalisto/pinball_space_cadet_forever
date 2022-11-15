@@ -15,11 +15,11 @@ class HackToggleButton extends StatelessWidget {
       onPressed: onPressed,
       color: hackIsActive ? _color : null,
       hoverColor: _color,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
+      child: const Padding(
+        padding: EdgeInsets.all(7.0),
         child: Text(
           '💀',
-          style: TextStyle(fontSize: size.height * 0.03),
+          style: TextStyle(fontSize: 25),
         ),
       ),
     );
