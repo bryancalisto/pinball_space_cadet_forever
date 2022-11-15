@@ -7,6 +7,7 @@ TODO:
 - Put animations on button.
 - Implement info messages.
 - Validate all cases are working with plugin.
+- Validate pinball PE hash.
 */
 
 void main() {
