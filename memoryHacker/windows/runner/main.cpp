@@ -1,3 +1,7 @@
+/*
+  Icon credits: Pinball icons created by Smashicons - Flaticon, "https://www.flaticon.com/free-icons/pinball".
+*/
+
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>

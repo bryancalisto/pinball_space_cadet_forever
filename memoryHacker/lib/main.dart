@@ -3,7 +3,6 @@ import 'package:memoryhacker/pages/control_page/control_page.dart';
 
 /*
 TODO:
-- Change icon.
 - Put animations on button.
 - Implement info messages.
 - Validate all cases are working with plugin.
