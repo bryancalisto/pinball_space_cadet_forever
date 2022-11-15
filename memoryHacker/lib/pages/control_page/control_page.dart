@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memoryhacker/config.dart';
+import 'package:memoryhacker/utils/constants.dart';
 import 'package:memoryhacker/utils/native_bridge.dart';
 import 'package:memoryhacker/pages/control_page/widgets/hack_toggle_button.dart';
 
@@ -12,29 +12,26 @@ class ControlPage extends StatefulWidget {
 
 class _ControlPageState extends State<ControlPage> {
   late bool _hackIsActive;
-  String _msg = 'TEST';
+  String _msg = '';
+
+  void _resetMsg() {
+    _msg = '';
+  }
 
   void _checkAndUpdateHackStatus() {
-    if (debugIsOn) {
-      setState(() {
-        _hackIsActive = false;
-      });
-      return;
-    }
-
     final result = nativeIsHackActive();
 
     if (![0, 1].contains(result)) {
-      print('There was a error: $result');
-
       setState(() {
         _hackIsActive = false;
+        _msg = msgMap[result] ?? '';
       });
 
       return;
     }
 
     setState(() {
+      _resetMsg();
       _hackIsActive = result == 1;
     });
   }
@@ -46,22 +43,17 @@ class _ControlPageState extends State<ControlPage> {
   }
 
   void toggleHack() {
-    if (debugIsOn) {
+    final result = nativeToggleHack(!_hackIsActive);
+
+    if (result != 0) {
       setState(() {
-        _hackIsActive = !_hackIsActive;
-        _msg = _msg.isEmpty ? 'Test' : '';
+        _msg = msgMap[result] ?? '';
       });
       return;
     }
 
     setState(() {
-      final result = nativeToggleHack(!_hackIsActive);
-
-      if (result != 0) {
-        print('There was a error: $result');
-        return;
-      }
-
+      _resetMsg();
       _hackIsActive = !_hackIsActive;
     });
   }
@@ -75,6 +67,7 @@ class _ControlPageState extends State<ControlPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              HackToggleButton(onPressed: toggleHack, hackIsActive: _hackIsActive),
               _msg.isNotEmpty
                   ? Text(
                       _msg,
@@ -84,7 +77,6 @@ class _ControlPageState extends State<ControlPage> {
                       ),
                     )
                   : Container(),
-              HackToggleButton(onPressed: toggleHack, hackIsActive: _hackIsActive),
             ],
           ),
         ),
