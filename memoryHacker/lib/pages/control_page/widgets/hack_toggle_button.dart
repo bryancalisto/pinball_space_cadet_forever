@@ -9,14 +9,13 @@ class HackToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return MaterialButton(
       onPressed: onPressed,
       color: hackIsActive ? _color : null,
       hoverColor: _color,
+      shape: const CircleBorder(),
       child: const Padding(
-        padding: EdgeInsets.all(7.0),
+        padding: EdgeInsets.all(6),
         child: Text(
           '💀',
           style: TextStyle(fontSize: 25),
