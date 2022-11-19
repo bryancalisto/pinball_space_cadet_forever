@@ -53,15 +53,18 @@ class _ControlPageState extends State<ControlPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               HackToggleButton(onPressed: toggleHack, hackIsActive: _hackIsActive),
-              _msg.isNotEmpty
-                  ? Text(
-                      _msg,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Container(),
+              if (_msg.isNotEmpty) ...[
+                const SizedBox(
+                  height: 10,
+                ),
+                Text(
+                  _msg,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                )
+              ]
             ],
           ),
         ),
