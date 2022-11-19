@@ -14,25 +14,12 @@ class _ControlPageState extends State<ControlPage> {
   late bool _hackIsActive;
   String _msg = '';
 
-  void _resetMsg() {
-    _msg = '';
-  }
-
   void _checkAndUpdateHackStatus() {
     final result = nativeIsHackActive();
 
-    if (![0, 1].contains(result)) {
-      setState(() {
-        _hackIsActive = false;
-        _msg = msgMap[result] ?? '';
-      });
-
-      return;
-    }
-
     setState(() {
-      _resetMsg();
-      _hackIsActive = result == 1;
+      _hackIsActive = result == 1 ? true : false;
+      _msg = msgMap[result] ?? '';
     });
   }
 
@@ -45,16 +32,14 @@ class _ControlPageState extends State<ControlPage> {
   void toggleHack() {
     final result = nativeToggleHack(!_hackIsActive);
 
-    if (result != 0) {
-      setState(() {
-        _msg = msgMap[result] ?? '';
-      });
-      return;
-    }
-
     setState(() {
-      _resetMsg();
-      _hackIsActive = !_hackIsActive;
+      if (result == Codes.ok || result == Codes.noOperation) {
+        _hackIsActive = !_hackIsActive;
+      } else if (pinballAppIsNotPresentCodes.contains(result)) {
+        _hackIsActive = false;
+      }
+
+      _msg = msgMap[result] ?? '';
     });
   }
 

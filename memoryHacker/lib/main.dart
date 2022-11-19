@@ -7,9 +7,7 @@ TODO:
 - Implement info messages.
 - Validate all cases are working with plugin.
 - Validate pinball PE hash.
-- Solve bug with stale 'isHackActive'. You can reproduce it by enabling the hack, closing pinball and reopening it. After
-reopen, it should keep trying to enable the hack, even though the has is already enabled. Check '_checkAndUpdateHackStatus',
-'toggleHack' and how '_hackIsActive' changes.
+- Setup retry-to-connect-to-program functionality.
 */
 
 void main() {

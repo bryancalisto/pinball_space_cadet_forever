@@ -7,10 +7,22 @@ class Msg {
   static String unexpectedBytecode = wrongHash;
 }
 
+class Codes {
+  static int noWindow = -1;
+  static int noOpenProcess = -2;
+  static int readMemory = -3;
+  static int writeMemory = -4;
+  static int noOperation = -5;
+  static int unexpectedBytecode = -6;
+  static int ok = 0;
+}
+
+final pinballAppIsNotPresentCodes = [Codes.noWindow, Codes.noOpenProcess];
+
 final msgMap = {
-  -1: Msg.noWindow,
-  -2: Msg.noOpenProcess,
-  -3: Msg.readMemory,
-  -4: Msg.writeMemory,
-  -6: Msg.unexpectedBytecode
+  Codes.noWindow: Msg.noWindow,
+  Codes.noOpenProcess: Msg.noOpenProcess,
+  Codes.readMemory: Msg.readMemory,
+  Codes.writeMemory: Msg.writeMemory,
+  Codes.unexpectedBytecode: Msg.unexpectedBytecode
 };
