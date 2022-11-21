@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_conditional_rendering/conditional.dart';
+import 'package:memoryhacker/pages/control_page/widgets/line.dart';
 import 'package:memoryhacker/utils/constants.dart';
 import 'package:memoryhacker/utils/native_bridge.dart';
 import 'package:memoryhacker/pages/control_page/widgets/hack_toggle_button.dart';
@@ -45,26 +47,41 @@ class _ControlPageState extends State<ControlPage> {
 
   @override
   Widget build(BuildContext context) {
+    final hackToggleButton = HackToggleButton(onPressed: toggleHack, hackIsActive: _hackIsActive);
+
     return Scaffold(
       body: Container(
         color: const Color.fromRGBO(37, 32, 32, 1),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              HackToggleButton(onPressed: toggleHack, hackIsActive: _hackIsActive),
-              if (_msg.isNotEmpty) ...[
-                const SizedBox(
-                  height: 10,
+              Line(hackIsActive: _hackIsActive),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: Conditional.list(
+                  context: context,
+                  conditionBuilder: (BuildContext context) {
+                    return _msg.isEmpty;
+                  },
+                  widgetBuilder: (BuildContext context) {
+                    return [hackToggleButton];
+                  },
+                  fallbackBuilder: (BuildContext context) {
+                    return [
+                      hackToggleButton,
+                      const SizedBox(height: 10),
+                      Text(
+                        _msg,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
+                      )
+                    ];
+                  },
                 ),
-                Text(
-                  _msg,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                )
-              ]
+              ),
             ],
           ),
         ),

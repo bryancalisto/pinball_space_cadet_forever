@@ -26,3 +26,5 @@ final msgMap = {
   Codes.writeMemory: Msg.writeMemory,
   Codes.unexpectedBytecode: Msg.unexpectedBytecode
 };
+
+const animationDuration = Duration(milliseconds: 400);

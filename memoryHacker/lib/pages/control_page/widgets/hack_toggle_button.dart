@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:memoryhacker/utils/constants.dart';
 
 class HackToggleButton extends StatelessWidget {
   final void Function() onPressed;
@@ -9,14 +10,16 @@ class HackToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialButton(
-      onPressed: onPressed,
-      color: hackIsActive ? _color : null,
-      hoverColor: _color,
-      shape: const CircleBorder(),
-      child: const Padding(
-        padding: EdgeInsets.all(6),
-        child: Text(
+    return InkWell(
+      onTap: onPressed,
+      child: AnimatedContainer(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(50),
+          color: hackIsActive ? _color : Colors.transparent,
+        ),
+        duration: animationDuration,
+        padding: const EdgeInsets.all(6),
+        child: const Text(
           '💀',
           style: TextStyle(fontSize: 25),
         ),
