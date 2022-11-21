@@ -4,7 +4,6 @@ import 'package:memoryhacker/pages/control_page/control_page.dart';
 /*
 TODO:
 - Validate pinball PE hash.
-- Setup retry-to-connect-to-program functionality.
 */
 
 void main() {
