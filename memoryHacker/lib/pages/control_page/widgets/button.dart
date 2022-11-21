@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:memoryhacker/utils/constants.dart';
 
 class Button extends StatelessWidget {
   final void Function() onPressed;
@@ -17,7 +16,7 @@ class Button extends StatelessWidget {
           borderRadius: BorderRadius.circular(50),
           color: hackIsActive ? _color : Colors.transparent,
         ),
-        duration: animationDuration,
+        duration: const Duration(milliseconds: 400),
         padding: const EdgeInsets.all(6),
         child: const Text(
           '💀',
