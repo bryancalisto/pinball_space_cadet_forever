@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:memoryhacker/utils/constants.dart';
 
-class HackToggleButton extends StatelessWidget {
+class Button extends StatelessWidget {
   final void Function() onPressed;
   final bool hackIsActive;
   final _color = const Color.fromRGBO(236, 226, 46, 1);
 
-  const HackToggleButton({super.key, required this.onPressed, required this.hackIsActive});
+  const Button({super.key, required this.onPressed, required this.hackIsActive});
 
   @override
   Widget build(BuildContext context) {

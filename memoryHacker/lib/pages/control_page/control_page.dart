@@ -3,7 +3,7 @@ import 'package:flutter_conditional_rendering/conditional.dart';
 import 'package:memoryhacker/pages/control_page/widgets/line.dart';
 import 'package:memoryhacker/utils/constants.dart';
 import 'package:memoryhacker/utils/native_bridge.dart';
-import 'package:memoryhacker/pages/control_page/widgets/hack_toggle_button.dart';
+import 'package:memoryhacker/pages/control_page/widgets/button.dart';
 
 class ControlPage extends StatefulWidget {
   const ControlPage({super.key});
@@ -47,7 +47,7 @@ class _ControlPageState extends State<ControlPage> {
 
   @override
   Widget build(BuildContext context) {
-    final hackToggleButton = HackToggleButton(onPressed: toggleHack, hackIsActive: _hackIsActive);
+    final button = Button(onPressed: toggleHack, hackIsActive: _hackIsActive);
 
     return Scaffold(
       body: Container(
@@ -65,11 +65,11 @@ class _ControlPageState extends State<ControlPage> {
                     return _msg.isEmpty;
                   },
                   widgetBuilder: (BuildContext context) {
-                    return [hackToggleButton];
+                    return [button];
                   },
                   fallbackBuilder: (BuildContext context) {
                     return [
-                      hackToggleButton,
+                      button,
                       const SizedBox(height: 10),
                       Text(
                         _msg,
