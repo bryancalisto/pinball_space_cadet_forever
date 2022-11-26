@@ -3,3 +3,4 @@ LIBRARY native
 EXPORTS
   toggleHack
   isHackActive
+  getExeFilePath

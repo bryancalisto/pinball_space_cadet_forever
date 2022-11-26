@@ -9,10 +9,11 @@ using namespace std;
 
 int main()
 {
-  toggleHack(false);
-  printf("IS ACTIVE: %d\n", isHackActive());
-  toggleHack(true);
-  printf("IS ACTIVE: %d\n", isHackActive());
+  // toggleHack(false);
+  // printf("IS ACTIVE: %d\n", isHackActive());
+  // toggleHack(true);
+  // printf("IS ACTIVE: %d\n", isHackActive());
+  // getExeFilePath();
   return 0;
 }
 
@@ -32,6 +33,48 @@ HWND findPinballWindow()
 #endif
 
   return hWnd;
+}
+
+wstring getExeFilePath()
+{
+  DWORD exeFilePathBufferLen = MAX_PATH;
+  DWORD processID = 0;
+  wstring exeFilePath;
+
+  HWND hWnd = findPinballWindow();
+
+  if (!hWnd)
+  {
+    printf("No pinball window\n");
+    return nullptr;
+  }
+
+  HANDLE hProc = getProcessHandle(hWnd, processID);
+
+  if (!hProc)
+  {
+    printf("No open process\n");
+    return nullptr;
+  }
+
+  LPWSTR exeFilePathBuffer = (LPWSTR)LocalAlloc(LPTR, exeFilePathBufferLen);
+  BOOL result = QueryFullProcessImageNameW(hProc, 0, exeFilePathBuffer, &exeFilePathBufferLen);
+
+  if (result)
+  {
+    exeFilePath = exeFilePathBuffer;
+#ifdef DEBUG
+    wcout << "File path: " << exeFilePath << endl;
+#endif
+  }
+  else
+  {
+    printf("Exe file path not found\n");
+  }
+
+  LocalFree(exeFilePathBuffer);
+
+  return exeFilePath;
 }
 
 UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
