@@ -16,7 +16,8 @@
 #define NO_OPERATION -5        // Based on the read byte from the process memory, it was concluded that the operation was already made so no need to execute it again
 #define UNEXPECTED_BYTECODE -6 // Detects an unexpected instruction in the byte that is used for the hack
 
-std::wstring getExeFilePath();
+LPWSTR getExeFilePath();
+void freeWChar(LPWSTR &toFree);
 HANDLE getProcessHandle(HWND hWnd, DWORD &PID);
 UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle);
 HWND findPinballWindow();

@@ -1,9 +1,13 @@
+import 'dart:ffi';
+
+import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_conditional_rendering/conditional.dart';
 import 'package:memoryhacker/pages/control_page/widgets/line.dart';
 import 'package:memoryhacker/utils/constants.dart';
 import 'package:memoryhacker/utils/native_bridge.dart';
 import 'package:memoryhacker/pages/control_page/widgets/button.dart';
+import 'package:memoryhacker/utils/utils.dart';
 
 class ControlPage extends StatefulWidget {
   const ControlPage({super.key});
@@ -48,6 +52,16 @@ class _ControlPageState extends State<ControlPage> {
   @override
   Widget build(BuildContext context) {
     final button = Button(onPressed: toggleHack, hackIsActive: _hackIsActive);
+    final testBtn = ElevatedButton(
+      onPressed: () async {
+        final data = nativeGetExeFilePath();
+        final filePath = data.toDartString();
+        final hash = await getFileMd5Hash(filePath);
+        print('hassh $hash');
+        // nativeFreeWChar(data); // This is crashing the app
+      },
+      child: const Text('TEST'),
+    );
 
     return Scaffold(
       body: Container(
@@ -65,10 +79,11 @@ class _ControlPageState extends State<ControlPage> {
                     return _msg.isEmpty;
                   },
                   widgetBuilder: (BuildContext context) {
-                    return [button];
+                    return [testBtn, button];
                   },
                   fallbackBuilder: (BuildContext context) {
                     return [
+                      testBtn,
                       button,
                       const SizedBox(height: 10),
                       Text(

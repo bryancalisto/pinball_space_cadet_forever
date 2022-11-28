@@ -35,11 +35,10 @@ HWND findPinballWindow()
   return hWnd;
 }
 
-wstring getExeFilePath()
+LPWSTR getExeFilePath()
 {
   DWORD exeFilePathBufferLen = MAX_PATH;
   DWORD processID = 0;
-  wstring exeFilePath;
 
   HWND hWnd = findPinballWindow();
 
@@ -62,19 +61,21 @@ wstring getExeFilePath()
 
   if (result)
   {
-    exeFilePath = exeFilePathBuffer;
 #ifdef DEBUG
-    wcout << "File path: " << exeFilePath << endl;
+    wcout << "File path: " << exeFilePathBuffer << endl;
 #endif
+    return exeFilePathBuffer;
   }
   else
   {
     printf("Exe file path not found\n");
+    return nullptr;
   }
+}
 
-  LocalFree(exeFilePathBuffer);
-
-  return exeFilePath;
+void freeWChar(LPWSTR &toFree)
+{
+  LocalFree(toFree);
 }
 
 UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
