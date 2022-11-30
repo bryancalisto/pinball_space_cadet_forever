@@ -73,11 +73,6 @@ LPWSTR getExeFilePath()
   }
 }
 
-void freeWChar(LPWSTR &toFree)
-{
-  LocalFree(toFree);
-}
-
 UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
 {
   UINT_PTR baseAddress = 0;

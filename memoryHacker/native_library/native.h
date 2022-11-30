@@ -17,7 +17,6 @@
 #define UNEXPECTED_BYTECODE -6 // Detects an unexpected instruction in the byte that is used for the hack
 
 LPWSTR getExeFilePath();
-void freeWChar(LPWSTR &toFree);
 HANDLE getProcessHandle(HWND hWnd, DWORD &PID);
 UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle);
 HWND findPinballWindow();

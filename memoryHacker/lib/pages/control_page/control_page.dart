@@ -58,7 +58,13 @@ class _ControlPageState extends State<ControlPage> {
         final filePath = data.toDartString();
         final hash = await getFileMd5Hash(filePath);
         print('hassh $hash');
-        // nativeFreeWChar(data); // This is crashing the app
+
+        try {
+          calloc.free(data);
+        } catch (e) {
+          print(e);
+        }
+        // nativeFreeWChar(data); // This is crashing the app. Use calloc.free to free and remove this C implementation
       },
       child: const Text('TEST'),
     );

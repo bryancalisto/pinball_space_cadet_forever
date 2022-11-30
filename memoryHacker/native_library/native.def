@@ -4,4 +4,3 @@ EXPORTS
   toggleHack
   isHackActive
   getExeFilePath
-  freeWChar
