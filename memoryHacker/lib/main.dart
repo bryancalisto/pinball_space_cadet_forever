@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memoryhacker/pages/control_page/control_page.dart';
 
-/*
-TODO:
-- Validate pinball PE hash.
-*/
-
 void main() {
   runApp(const MyApp());
 }
