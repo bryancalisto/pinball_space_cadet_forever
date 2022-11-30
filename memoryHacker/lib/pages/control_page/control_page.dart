@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_conditional_rendering/conditional.dart';
@@ -20,6 +18,21 @@ class _ControlPageState extends State<ControlPage> {
   late bool _hackIsActive;
   String _msg = '';
 
+  void _checkFileHash() async {
+    final data = nativeGetExeFilePath();
+    final filePath = data.toDartString();
+    final hash = await getFileMd5Hash(filePath);
+
+    if (!allowedPinballFilesMd5Hashes.contains(hash)) {
+      setState(() {
+        _msg = Msg.unexpectedFileHash;
+      });
+    }
+
+    // Have to free the buffer that was allocated in cpp
+    calloc.free(data);
+  }
+
   void _checkAndUpdateHackStatus() {
     final result = nativeIsHackActive();
 
@@ -31,11 +44,12 @@ class _ControlPageState extends State<ControlPage> {
 
   @override
   void initState() {
+    _checkFileHash();
     _checkAndUpdateHackStatus();
     super.initState();
   }
 
-  void toggleHack() {
+  void _toggleHack() {
     final result = nativeToggleHack(!_hackIsActive);
 
     setState(() {
@@ -51,23 +65,7 @@ class _ControlPageState extends State<ControlPage> {
 
   @override
   Widget build(BuildContext context) {
-    final button = Button(onPressed: toggleHack, hackIsActive: _hackIsActive);
-    final testBtn = ElevatedButton(
-      onPressed: () async {
-        final data = nativeGetExeFilePath();
-        final filePath = data.toDartString();
-        final hash = await getFileMd5Hash(filePath);
-        print('hassh $hash');
-
-        try {
-          calloc.free(data);
-        } catch (e) {
-          print(e);
-        }
-        // nativeFreeWChar(data); // This is crashing the app. Use calloc.free to free and remove this C implementation
-      },
-      child: const Text('TEST'),
-    );
+    final button = Button(onPressed: _toggleHack, hackIsActive: _hackIsActive);
 
     return Scaffold(
       body: Container(
@@ -85,11 +83,10 @@ class _ControlPageState extends State<ControlPage> {
                     return _msg.isEmpty;
                   },
                   widgetBuilder: (BuildContext context) {
-                    return [testBtn, button];
+                    return [button];
                   },
                   fallbackBuilder: (BuildContext context) {
                     return [
-                      testBtn,
                       button,
                       const SizedBox(height: 10),
                       Text(

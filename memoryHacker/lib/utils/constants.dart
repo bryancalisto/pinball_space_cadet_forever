@@ -5,6 +5,7 @@ class Msg {
   static String readMemory = "Couldn't process the program's memory";
   static String writeMemory = readMemory;
   static String unexpectedBytecode = wrongHash;
+  static String unexpectedFileHash = 'This pinball .exe is not suported';
 }
 
 class Codes {
@@ -26,3 +27,8 @@ final msgMap = {
   Codes.writeMemory: Msg.writeMemory,
   Codes.unexpectedBytecode: Msg.unexpectedBytecode
 };
+
+const allowedPinballFilesMd5Hashes = [
+  'faa1fde004b3c60b5a8068a7c3aab151',
+  '554cbf463584a1a5a525a46aee7a7912',
+];
