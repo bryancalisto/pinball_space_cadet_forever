@@ -15,7 +15,7 @@ typedef ToggleHack = int Function(bool);
 typedef CIsHackActiveFunc = ffi.Int Function();
 typedef IsHackActive = int Function();
 
-final libraryPath = path.join(Directory.current.path, 'native_library\\build', 'Debug', 'native.dll');
+final libraryPath = path.join(Directory.current.path, 'native.dll');
 
 final dylib = ffi.DynamicLibrary.open(libraryPath);
 
