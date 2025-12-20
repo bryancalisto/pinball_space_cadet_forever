@@ -1,10 +1,26 @@
-### HAVE TO UPDATE THIS DOC...
 # pinball_space_cadet_forever
-A tool that to enable infinite balls in Pinball Space Cadet. You can trigger a game end whenever you want (to save your score).
+A tool to get infinite balls in Pinball Space Cadet (the classic Windows game).
 
-The program works by patching the binary. It overwrites the ball decreasing instruction (converting it to a NOP) and the menu's 'Demo' option functionality (using it to trigger a game end manually).
+It overwrites the ball decreasing instruction with a NOP so that the ball counter is not decreased and also overwrites the UI's 'Demo' option functionality with code to trigger a game end manually and thus save your score.
 
-## Usage
-- If you want to ****enable**** the hack: `python patchPinball.py pathToYourPinballProgram.exe patch`.
-- If you want to **disable** the hack: `python patchPinball.py pathToYourPinballProgram.exe unpatch`.
-- To **finish the game and save your score**, click **Demo** in the menu.
+
+The program has two versions:
+- One that patches the static game `.exe` file.
+- One that patches the binary on runtime.
+
+
+## Static .exe patch usage
+### To ****enable**** infinite balls
+```python
+python3 patchPinball.py pathToYourPinballProgram.exe patch
+```
+
+
+### To **disable** infinite balls
+```python
+python3 patchPinball.py pathToYourPinballProgram.exe unpatch
+```
+
+
+## **Finishing the game and saving your score**
+- Just click the game UI's **Demo** option menu.
