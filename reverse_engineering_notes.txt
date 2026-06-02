@@ -1,8 +1,12 @@
+-- Keeping this doc as a souvenir to remind me of the good old days when I was discovering this stuff --
+
 REVERSE ENGINEERING 'PINBALL SPACE CADET'
 
 /*********GUIDELINES*********/
 
 - F = Function.
+- 0x means hex number.
+- GD! = GREAT DISCOVERY!
 
 /****************************/
 
@@ -16,8 +20,8 @@ every time score is updated.
 - Game over controller is the 32 switch case (0x01011E40 + 0x20, mentioned before). It's called when you lose 3rd ball.
 - 0x01023BBC contains a reference a posible data structure located in 0x4A3DED0 from which the switch case position (e.g 0x20) is extracted in F 'MissionControl'. It's possible that it comes from a point where a condition related to NUMBER OF BALLS is evalutated. The exact byte that is taken to define the switch case the flow will go is taken from 0x04A3DED6.
 - F 'ChangeBallCount' seems to be very important. It's called when you lose a ball.
-- Number of balls is at byte ptr [0x04A24D16]. It's updated by 'ChangeBallCount'. In actual raw file, this byte is at 0x00011CF2.
-- Changing opcode byte in 0x010128F2 (in raw file: 0x00011CF2) from 0x48 (dec) to 0x90 (nop) will cause to disable decrement of balls left.
+- (GD!) Number of balls is at byte ptr [0x04A24D16]. It's updated by 'ChangeBallCount'. In actual raw file, this byte is at 0x00011CF2.
+- (GD!) Changing opcode byte in 0x010128F2 (in raw file: 0x00011CF2) from 0x48 (dec) to 0x90 (nop) will cause to disable decrement of balls left.
 
 *** TO BUILD A FEATURE THAT ALLOWS TO TURN ON/OFF 'FOREVER MODE'
 - I defined that Menu's 'Demo' option will trigger change of state when clicked. To achieve this, the upcoming will be implemented.
