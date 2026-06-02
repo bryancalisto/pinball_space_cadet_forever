@@ -5,18 +5,82 @@
 #include <string>
 #include "native.h"
 
+#define DEBUG
+
+#define DEC_INSTRUCTION_ADDRESS 0x000128F2 // Where the instruction that decreases balls is
+
+// INSTRUCTIONS
+#define NOP_INSTRUCTION 0x90
+#define DEC_INSTRUCTION 0x48
+
+// ERRORS
+#define NO_WINDOW -1           // Couldn't get the window handle
+#define NO_OPEN_PROCESS -2     // Couldn't open the process based on the window handle
+#define READ_MEMORY -3         // Couldn't read the process memory
+#define WRITE_MEMORY -4        // Couldn't write the process memory
+#define NO_OPERATION -5        // Based on the read byte from the process memory, it was concluded that the operation was already made so no need to execute it again
+#define UNEXPECTED_BYTECODE -6 // Detects an unexpected instruction in the byte that is used for the hack
+
+LPWSTR getExeFilePath();
+HANDLE getProcessHandle(HWND hWnd, DWORD &PID);
+UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle);
+HWND findPinballWindow();
+int readMemory(HANDLE handle, UINT_PTR aimedAddress, unsigned char *buffer, uint8_t nBytesToRead);
+int writeMemory(HANDLE handle, UINT_PTR aimedAddress, int data, uint8_t dataSize);
+int toggleHack(bool activate);
+int isHackActive();
+
+
 using namespace std;
 
-int main()
+static void printUsage(const char *programName)
 {
-  // toggleHack(false);
-  // printf("IS ACTIVE: %d\n", isHackActive());
-  // toggleHack(true);
-  // printf("IS ACTIVE: %d\n", isHackActive());
-  // getExeFilePath();
-  return 0;
+  printf("Usage: %s <enable|disable|status>\n", programName);
 }
 
+int main(int argc, char **argv)
+{
+  if (argc < 2)
+  {
+    printUsage(argv[0]);
+    return 1;
+  }
+
+  string command = argv[1];
+
+  if (command == "enable")
+  {
+    return toggleHack(true);
+  }
+
+  if (command == "disable")
+  {
+    return toggleHack(false);
+  }
+
+  if (command == "status")
+  {
+    int result = isHackActive();
+
+    if (result >= 0)
+    {
+      printf("Hack is %s\n", result ? "enabled" : "disabled");
+    }
+
+    return result;
+  }
+
+  printUsage(argv[0]);
+  return 1;
+}
+
+/**
+ * NOTES:
+ * 1. Can find the program with 'WaveMixSoundGuy' class.
+ * 2. Get image base address https://stackoverflow.com/questions/42015819/reading-an-address-relative-to-the-base-address-from-a-process-with-readprocessm ,
+ * https://stackoverflow.com/questions/9545732/what-is-hmodule
+ * https://stackoverflow.com/questions/14467229/get-base-address-of-process
+ */
 HWND findPinballWindow()
 {
 #ifdef DEBUG
