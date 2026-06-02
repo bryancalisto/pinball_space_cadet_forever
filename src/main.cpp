@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <iostream>
 #include <psapi.h>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 
 #pragma comment(lib, "psapi.lib")
@@ -22,6 +22,7 @@
 #define WRITE_MEMORY -4        // Couldn't write the process memory
 #define NO_OPERATION -5        // Based on the read byte from the process memory, it was concluded that the operation was already made so no need to execute it again
 #define UNEXPECTED_BYTECODE -6 // Detects an unexpected instruction in the byte that is used for the hack
+#define NO_PROCESS_HANDLE -7
 
 LPWSTR getExeFilePath();
 HANDLE getProcessHandle(HWND hWnd, DWORD &PID);
@@ -34,9 +35,25 @@ int isHackActive();
 
 using namespace std;
 
+template <typename... Args>
+void logDebug(const char *format, Args... args)
+{
+#ifdef DEBUG
+  printf(format, args...);
+#endif
+}
+
+template <typename... Args>
+void logDebugW(Args... args)
+{
+#ifdef DEBUG
+  (wcout << ... << args) << endl;
+#endif
+}
+
 static void printUsage(const char *programName)
 {
-  printf("Usage: %s <enable|disable|status>\n", programName);
+  cout << "Usage: " << programName << " <enable|disable|status>" << endl;
 }
 
 int main(int argc, char **argv)
@@ -84,18 +101,15 @@ int main(int argc, char **argv)
  */
 HWND findPinballWindow()
 {
-#ifdef DEBUG
-  printf("Searching window with classname 'WaveMixSoundGuy'\n");
-#endif
+  logDebug("Searching window with classname 'WaveMixSoundGuy'");
 
   HWND hWnd = FindWindowA("WaveMixSoundGuy", nullptr);
 
-#ifdef DEBUG
   if (!hWnd)
   {
-    cerr << "Couldn't find 'WaveMixSoundGuy' window" << endl;
+    cerr << "Couldn't find Pinball ('WaveMixSoundGuy') window" << endl;
+    exit(NO_WINDOW);
   }
-#endif
 
   return hWnd;
 }
@@ -107,18 +121,12 @@ LPWSTR getExeFilePath()
 
   HWND hWnd = findPinballWindow();
 
-  if (!hWnd)
-  {
-    printf("No pinball window\n");
-    return nullptr;
-  }
-
   HANDLE hProc = getProcessHandle(hWnd, processID);
 
   if (!hProc)
   {
     printf("No open process\n");
-    return nullptr;
+    exit(NO_OPEN_PROCESS);
   }
 
   LPWSTR exeFilePathBuffer = (LPWSTR)LocalAlloc(LPTR, exeFilePathBufferLen);
@@ -126,9 +134,7 @@ LPWSTR getExeFilePath()
 
   if (result)
   {
-#ifdef DEBUG
-    wcout << "File path: " << exeFilePathBuffer << endl;
-#endif
+    logDebugW("File path:", exeFilePathBuffer);
     return exeFilePathBuffer;
   }
   else
@@ -156,9 +162,7 @@ UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
 
     if (result)
     {
-#ifdef DEBUG
-      printf("exe filename '%ls'\n", exeFilename);
-#endif
+      logDebug("exe filename '%ls'\n", exeFilename);
 
       if (EnumProcessModulesEx(*handle, NULL, 0, &bytesRequired, 0x01))
       {
@@ -171,9 +175,7 @@ UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
             int moduleCount;
 
             moduleCount = bytesRequired / sizeof(HMODULE);
-#ifdef DEBUG
-            printf("Module count: %d\n", moduleCount);
-#endif
+            logDebug("Module count: %d\n", moduleCount);
             moduleArray = (HMODULE *)moduleArrayBytes;
 
             if (EnumProcessModulesEx(*handle, moduleArray, bytesRequired, &bytesRequired, 0x01))
@@ -184,17 +186,13 @@ UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle)
 
                 if (!moduleFilenameLen)
                 {
-#ifdef DEBUG
-                  printf("Error at GetModuleFileNameEx (0x%p): %d\n", (void *)moduleArray[i], GetLastError());
-#endif
+                  logDebug("Error at GetModuleFileNameEx (0x%p): %d\n", (void *)moduleArray[i], GetLastError());
                   continue;
                 }
 
                 if (*moduleFilename == *exeFilename)
                 {
-#ifdef DEBUG
-                  printf("Found .exe module\n");
-#endif
+                  logDebug("Found .exe module\n");
                   baseAddress = (UINT_PTR)moduleArray[i];
                   break;
                 }
@@ -218,18 +216,15 @@ HANDLE getProcessHandle(HWND hWnd, DWORD &PID)
 {
   GetWindowThreadProcessId(hWnd, &PID);
 
-#ifdef DEBUG
-  printf("Getting process handle (PID: %d)\n", PID);
-#endif
+  logDebug("Getting process handle (PID: %d)\n", PID);
 
   HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, false, PID);
 
-#ifdef DEBUG
   if (!handle)
   {
     cerr << "Couldn't get process handle" << endl;
+    exit(NO_PROCESS_HANDLE);
   }
-#endif
 
   return handle;
 }
@@ -238,15 +233,11 @@ int writeMemory(HANDLE handle, UINT_PTR aimedAddress, int data, uint8_t dataSize
 {
   int result = WriteProcessMemory(handle, (LPVOID)aimedAddress, &data, dataSize, NULL);
 
-#ifdef DEBUG
-  printf("Writing 0x%x to [0x%p]\n", data, (void *)aimedAddress);
-#endif
+  logDebug("Writing 0x%x to [0x%p]\n", data, (void *)aimedAddress);
 
   if (result > 0)
   {
-#ifdef DEBUG
-    clog << "Memory written successfully" << endl;
-#endif
+    logDebug("Memory written successfully\n");
   }
   else
   {
@@ -260,28 +251,23 @@ int readMemory(HANDLE handle, UINT_PTR aimedAddress, unsigned char *buffer, uint
 {
   int result = ReadProcessMemory(handle, (LPVOID)aimedAddress, buffer, nBytesToRead, NULL);
 
-#ifdef DEBUG
-  printf("Reading %d bytes from [0x%p]\n", nBytesToRead, (void *)aimedAddress);
-#endif
+  logDebug("Reading %d bytes from [0x%p]\n", nBytesToRead, (void *)aimedAddress);
 
   if (result > 0)
   {
-#ifdef DEBUG
-    clog << "Memory read successfully" << endl;
-
-    printf("[ ");
+    logDebug("Memory read successfully\n");
+    logDebug("[ ");
 
     for (int i = 0; i < nBytesToRead; i++)
     {
-      printf("0x%x ", *(buffer + i));
+      logDebug("0x%x ", *(buffer + i));
     }
 
-    printf("]\n");
-#endif
+    logDebug("]\n");
   }
   else
   {
-    printf("Memory couldn't be read: %d\n", GetLastError());
+    logDebug("Memory couldn't be read: %d\n", GetLastError());
   }
 
   return result;
@@ -313,9 +299,7 @@ int toggleHack(bool activate)
 
   unsigned char buffer;
   UINT_PTR baseAddress = getProcessBaseAddress(PID, &hProc);
-#ifdef DEBUG
-  printf("Base address: 0x%p\n", (void *)baseAddress);
-#endif
+  logDebug("Base address: 0x%p\n", (void *)baseAddress);
   UINT_PTR aimedAddress = baseAddress + DEC_INSTRUCTION_ADDRESS;
 
   int readResult = readMemory(hProc, aimedAddress, &buffer, 1);
@@ -367,9 +351,7 @@ int isHackActive()
 
   unsigned char buffer;
   UINT_PTR baseAddress = getProcessBaseAddress(PID, &hProc);
-#ifdef DEBUG
-  printf("Base address: 0x%p\n", (void *)baseAddress);
-#endif
+  logDebug("Base address: 0x%p\n", (void *)baseAddress);
   UINT_PTR aimedAddress = baseAddress + DEC_INSTRUCTION_ADDRESS;
 
   int readResult = readMemory(hProc, aimedAddress, &buffer, 1);
