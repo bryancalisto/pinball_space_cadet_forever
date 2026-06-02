@@ -1,8 +1,11 @@
+#define _WIN32_WINNT 0x0600
 #include <windows.h>
 #include <iostream>
 #include <psapi.h>
 #include <stdio.h>
 #include <string>
+
+#pragma comment(lib, "psapi.lib")
 
 #define DEBUG
 
@@ -28,7 +31,6 @@ int readMemory(HANDLE handle, UINT_PTR aimedAddress, unsigned char *buffer, uint
 int writeMemory(HANDLE handle, UINT_PTR aimedAddress, int data, uint8_t dataSize);
 int toggleHack(bool activate);
 int isHackActive();
-
 
 using namespace std;
 
