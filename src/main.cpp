@@ -3,7 +3,6 @@
 #include <psapi.h>
 #include <stdio.h>
 #include <string>
-#include "native.h"
 
 #define DEBUG
 
