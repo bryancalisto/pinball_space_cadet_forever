@@ -4,6 +4,7 @@
 #include <psapi.h>
 #include <cstdio>
 #include <string>
+#include <cstdint>
 
 #pragma comment(lib, "psapi.lib")
 
@@ -11,25 +12,29 @@
 
 #define DEC_INSTRUCTION_ADDRESS 0x000128F2 // Where the instruction that decreases balls is
 
+#define TITLE_STR_ADDRESS 0x00048a98   // Where the "3D Pinball for Windows - Space Cadet" string is
+#define PLAYER1_STR_ADDRESS 0x00049d96 // Where the "Player 1" string is
+
 // INSTRUCTIONS
 #define NOP_INSTRUCTION 0x90
 #define DEC_INSTRUCTION 0x48
 
 // ERRORS
-#define NO_WINDOW -1           // Couldn't get the window handle
-#define NO_OPEN_PROCESS -2     // Couldn't open the process based on the window handle
-#define READ_MEMORY -3         // Couldn't read the process memory
-#define WRITE_MEMORY -4        // Couldn't write the process memory
-#define NO_OPERATION -5        // Based on the read byte from the process memory, it was concluded that the operation was already made so no need to execute it again
-#define UNEXPECTED_BYTECODE -6 // Detects an unexpected instruction in the byte that is used for the hack
-#define NO_PROCESS_HANDLE -7
+#define NO_WINDOW_ERR -1           // Couldn't get the window handle
+#define NO_OPEN_PROCESS_ERR -2     // Couldn't open the process based on the window handle
+#define READ_MEMORY_ERR -3         // Couldn't read the process memory
+#define WRITE_MEMORY_ERR -4        // Couldn't write the process memory
+#define NO_OPERATION_ERR -5        // Based on the read byte from the process memory, it was concluded that the operation was already made so no need to execute it again
+#define UNEXPECTED_BYTECODE_ERR -6 // Detects an unexpected instruction in the byte that is used for the hack
+#define NO_PROCESS_HANDLE_ERR -7
+#define VIRTUAL_PROTECT_ERR -8
 
 LPWSTR getExeFilePath();
 HANDLE getProcessHandle(HWND hWnd, DWORD &PID);
 UINT_PTR getProcessBaseAddress(DWORD processID, HANDLE *handle);
 HWND findPinballWindow();
 int readMemory(HANDLE handle, UINT_PTR aimedAddress, unsigned char *buffer, uint8_t nBytesToRead);
-int writeMemory(HANDLE handle, UINT_PTR aimedAddress, int data, uint8_t dataSize);
+int writeMemory(const HANDLE handle, UINT_PTR aimedAddress, uint8_t data[], uint8_t dataSize);
 int toggleHack(bool activate);
 int isHackActive();
 
@@ -53,11 +58,13 @@ void logDebugW(Args... args)
 
 static void printUsage(const char *programName)
 {
-  cout << "Usage: " << programName << " <enable|disable|status>" << endl;
+  cout << "Usage: " << programName << " <on|off|status>" << endl;
 }
 
 int main(int argc, char **argv)
 {
+  cout << endl;
+
   if (argc < 2)
   {
     printUsage(argv[0]);
@@ -66,12 +73,14 @@ int main(int argc, char **argv)
 
   string command = argv[1];
 
-  if (command == "enable")
+  logDebug("Running in DEBUG mode\n\n");
+
+  if (command == "on")
   {
     return toggleHack(true);
   }
 
-  if (command == "disable")
+  if (command == "off")
   {
     return toggleHack(false);
   }
@@ -82,7 +91,7 @@ int main(int argc, char **argv)
 
     if (result >= 0)
     {
-      printf("Hack is %s\n", result ? "enabled" : "disabled");
+      printf("Hack is %s\n", result ? "on" : "off");
     }
 
     return result;
@@ -108,7 +117,7 @@ HWND findPinballWindow()
   if (!hWnd)
   {
     cerr << "Couldn't find Pinball ('WaveMixSoundGuy') window" << endl;
-    exit(NO_WINDOW);
+    exit(NO_WINDOW_ERR);
   }
 
   return hWnd;
@@ -126,7 +135,7 @@ LPWSTR getExeFilePath()
   if (!hProc)
   {
     printf("No open process\n");
-    exit(NO_OPEN_PROCESS);
+    exit(NO_OPEN_PROCESS_ERR);
   }
 
   LPWSTR exeFilePathBuffer = (LPWSTR)LocalAlloc(LPTR, exeFilePathBufferLen);
@@ -223,21 +232,43 @@ HANDLE getProcessHandle(HWND hWnd, DWORD &PID)
   if (!handle)
   {
     cerr << "Couldn't get process handle" << endl;
-    exit(NO_PROCESS_HANDLE);
+    exit(NO_PROCESS_HANDLE_ERR);
   }
 
   return handle;
 }
 
-int writeMemory(HANDLE handle, UINT_PTR aimedAddress, int data, uint8_t dataSize)
+int writeMemory(const HANDLE hProc, UINT_PTR aimedAddress, uint8_t data[], uint8_t dataSize)
 {
-  int result = WriteProcessMemory(handle, (LPVOID)aimedAddress, &data, dataSize, NULL);
+  DWORD oldProtection;
 
-  logDebug("Writing 0x%x to [0x%p]\n", data, (void *)aimedAddress);
+  if (!VirtualProtectEx(hProc, (PVOID)aimedAddress, dataSize, PAGE_EXECUTE_READWRITE, &oldProtection))
+  {
+    cerr << "Failed to set memory protection to allow writing. Error: " << GetLastError() << endl;
+    CloseHandle(hProc);
+    return VIRTUAL_PROTECT_ERR;
+  }
+
+  int result = WriteProcessMemory(hProc, (LPVOID)aimedAddress, data, dataSize, NULL);
+
+  logDebug("Writing data to [0x%p]\n", data, (void *)aimedAddress);
+
+  logDebug("Data: ");
+  for (int i = 0; i < dataSize; i++)
+  {
+    logDebug("%02X ", data[i]);
+  }
+  logDebug("\n");
 
   if (result > 0)
   {
     logDebug("Memory written successfully\n");
+    if (!VirtualProtectEx(hProc, (PVOID)aimedAddress, dataSize, oldProtection, &oldProtection))
+    {
+      cerr << "Failed to restore memory protection. Error: " << GetLastError() << endl;
+      CloseHandle(hProc);
+      return VIRTUAL_PROTECT_ERR;
+    }
   }
   else
   {
@@ -276,54 +307,65 @@ int readMemory(HANDLE handle, UINT_PTR aimedAddress, unsigned char *buffer, uint
 int toggleHack(bool activate)
 {
   DWORD PID = 0;
-  int instruction = NOP_INSTRUCTION;
-
-  if (!activate)
-  {
-    instruction = DEC_INSTRUCTION;
-  }
 
   HWND hWnd = findPinballWindow();
 
   if (!hWnd)
   {
-    return NO_WINDOW;
+    return NO_WINDOW_ERR;
   }
 
   HANDLE hProc = getProcessHandle(hWnd, PID);
 
   if (!hProc)
   {
-    return NO_OPEN_PROCESS;
+    return NO_OPEN_PROCESS_ERR;
   }
 
-  unsigned char buffer;
+  uint8_t instructionValue;
   UINT_PTR baseAddress = getProcessBaseAddress(PID, &hProc);
   logDebug("Base address: 0x%p\n", (void *)baseAddress);
-  UINT_PTR aimedAddress = baseAddress + DEC_INSTRUCTION_ADDRESS;
+  UINT_PTR decInstructionAddress = baseAddress + DEC_INSTRUCTION_ADDRESS;
+  UINT_PTR titleStrAddress = baseAddress + TITLE_STR_ADDRESS;
+  UINT_PTR player1StrAddress = baseAddress + PLAYER1_STR_ADDRESS;
 
-  int readResult = readMemory(hProc, aimedAddress, &buffer, 1);
-
-  if (!readResult)
+  if (!readMemory(hProc, decInstructionAddress, &instructionValue, 1))
   {
-    return READ_MEMORY;
+    return READ_MEMORY_ERR;
   }
 
-  if (buffer != DEC_INSTRUCTION && buffer != NOP_INSTRUCTION)
+  if (instructionValue != DEC_INSTRUCTION && instructionValue != NOP_INSTRUCTION)
   {
-    return UNEXPECTED_BYTECODE;
+    return UNEXPECTED_BYTECODE_ERR;
   }
 
-  if ((activate && buffer == NOP_INSTRUCTION) || (!activate && buffer == DEC_INSTRUCTION))
+  uint8_t instructionNewValue = NOP_INSTRUCTION;
+
+  if (!activate)
   {
-    return NO_OPERATION;
+    instructionNewValue = DEC_INSTRUCTION;
   }
 
-  int writeResult = writeMemory(hProc, aimedAddress, instruction, 1);
-
-  if (!writeResult)
+  if ((activate && instructionValue == NOP_INSTRUCTION) || (!activate && instructionValue == DEC_INSTRUCTION))
   {
-    return WRITE_MEMORY;
+    printf("Already %s\n", activate ? "on" : "off");
+    return NO_OPERATION_ERR;
+  }
+
+  logDebug("\nToggling the decrease ball instruction\n");
+  uint8_t instructionPayload[1] = {instructionNewValue};
+  if (!writeMemory(hProc, decInstructionAddress, instructionPayload, 1))
+  {
+    return WRITE_MEMORY_ERR;
+  }
+
+  logDebug("\nToggling the 'player 1' text\n");
+  wstring newStrValue = activate ? L"0Hacker 1\0" : L"0Player 1\0"; // Adding the '0' padding (can be any char) to keep the first char from being clipped. I'm didn't look deeper into the issue. Just know that this fix works
+  size_t newStrValueSize = (newStrValue.length() + 1) * sizeof(wchar_t);
+
+  if (!writeMemory(hProc, player1StrAddress, (uint8_t *)newStrValue.data(), newStrValueSize))
+  {
+    return WRITE_MEMORY_ERR;
   }
 
   CloseHandle(hProc);
@@ -339,14 +381,14 @@ int isHackActive()
 
   if (!hWnd)
   {
-    return NO_WINDOW;
+    return NO_WINDOW_ERR;
   }
 
   HANDLE hProc = getProcessHandle(hWnd, PID);
 
   if (!hProc)
   {
-    return NO_OPEN_PROCESS;
+    return NO_OPEN_PROCESS_ERR;
   }
 
   unsigned char buffer;
@@ -358,12 +400,12 @@ int isHackActive()
 
   if (!readResult)
   {
-    return READ_MEMORY;
+    return READ_MEMORY_ERR;
   }
 
   if (buffer != DEC_INSTRUCTION && buffer != NOP_INSTRUCTION)
   {
-    return UNEXPECTED_BYTECODE;
+    return UNEXPECTED_BYTECODE_ERR;
   }
 
   bool result = buffer != DEC_INSTRUCTION;
