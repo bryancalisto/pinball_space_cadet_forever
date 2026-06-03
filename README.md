@@ -1,56 +1,51 @@
-# pinball_space_cadet_forever
-A tool to get infinite balls in Pinball Space Cadet (the classic Windows game).
+# pinball-hacker
+A tool to hack the game 3D Pinball Space Cadet (you know, the classic Windows game).
 
-It overwrites the ball decreasing instruction with a NOP so that the ball counter is not decreased and also overwrites the UI's 'Demo' option functionality with code to trigger a game end manually and thus save your score.
+If you ever wanted to know what happens when you turn on every light, switch, trap, here you go.
 
+<div align="center" style="padding: 30px;">
+    <img src="images/on.png" alt="Pinball Hacker" />
+</div>
 
-The program has two versions:
-- One that patches the static game `.exe` file.
-- One that patches the binary at runtime from a native Windows executable.
+It supports infinite balls for now. Maybe I'll add more hacks in the future. Not sure.
 
+## Prerequisites
 
-## Static .exe patch usage
-### To ****enable**** infinite balls
-```python
-python3 patchPinball.py pathToYourPinballProgram.exe patch
-```
+- Microsoft Visual C++ build tools (I tested it with Visual Studio 2019, but probably will work just fine with most versions) with the `cl` compiler available in your shell. You can open a _**"Developer Command Prompt for Visual Studio"**_ to get this environment set up.
+- Of course, a copy of **3D Pinball Space Cadet** running in your system.
 
+## How to build
 
-### To **disable** infinite balls
-```python
-python3 patchPinball.py pathToYourPinballProgram.exe unpatch
-```
+From a Visual Studio Developer Command Prompt or a PowerShell session with MSVC configured, run:
 
-
-## **Finishing the game and saving your score**
-- Just click the game UI's **Demo** option menu.
-
-## Runtime patch workflow
-The runtime patcher is now a native Windows executable built from `memoryHacker/native_library`.
-
-### Prerequisites
-- MinGW-w64 must be installed and `g++` must be available in `PATH`.
-
-### Build and run
-From the repository root, run:
 ```powershell
-.\run-hot-patcher.ps1
+.\build.ps1
+# or
+powershell .\build.ps1
 ```
 
-That script:
-- Builds `memoryHacker/native_library/native.exe` with MinGW using `memoryHacker/native_library/build.ps1`.
-- Runs `native.exe enable` from the same directory.
+This creates `build\pinball-hacker.exe`.
 
-### Manual native build
-If you want to build the executable directly, run the MinGW command from `memoryHacker/native_library`:
-```powershell
-g++ -o native.exe native.cpp -lpsapi
+## Using the pre-compiled binary
+
+You can find a pre-compiled binary in the [releases](https://github.com/bryancalisto/pinball-hacker/releases) section. Just download the latest release and extract the `pinball-hacker.exe` from the zip file. I'm just not sure if it will be flagged by antivirus software since it patches another process in memory. Take that into account.
+
+## How to run
+
+With Space Cadet Pinball running, use:
+
+```
+.\build\pinball-hacker.exe on
+.\build\pinball-hacker.exe off
+.\build\pinball-hacker.exe status
 ```
 
-### Manual runtime commands
-From `memoryHacker/native_library`, you can run:
-```powershell
-.\native.exe enable
-.\native.exe disable
-.\native.exe status
-```
+- `on` enables the hack.
+- `off` disables the hack.
+- `status` prints whether the hack is currently active. You can determine if whether it's enabled by looking at the "Player 1" string in the score and messages panel. If it's enabled, you'll see "Hacker 1" instead.
+
+## How it works
+
+It searches for the running pinball game process, attaches to it and patches its code.
+
+For instance, for the 'infinite balls' trick, it patches the 'ball decrease' instruction with a NOP so that the ball counter is not decreased.
