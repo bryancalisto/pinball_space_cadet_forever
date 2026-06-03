@@ -8,7 +8,7 @@
 
 #pragma comment(lib, "psapi.lib")
 
-#define DEBUG
+// #define DEBUG
 
 #define DEC_INSTRUCTION_ADDRESS 0x000128F2 // Where the instruction that decreases balls is
 
